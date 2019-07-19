@@ -61,6 +61,9 @@ defmodule Ueberauth.Strategy.Spotify.OAuth do
     |> OAuth2.Client.get_token!(params)
   end
 
+  @doc """
+  Refresh a token granted through authorization code flow.
+  """
   @spec refresh_token!(any) :: OAuth2.Client.t()
   def refresh_token!(refresh_token) do
     client =
