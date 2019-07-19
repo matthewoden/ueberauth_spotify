@@ -54,11 +54,31 @@ defmodule Ueberauth.Strategy.Spotify.OAuth do
     |> OAuth2.Client.authorize_url!(params)
   end
 
-  @spec get_token!(term, keyword) :: OAuth2.AccessToken.t()
+  @spec get_token!(term, keyword) :: OAuth2.AccessToken.t() | OAuth2.Error.t()
   def get_token!(params, opts) do
     opts
     |> client()
     |> OAuth2.Client.get_token!(params)
+  end
+
+  @doc """
+  Refresh a token granted through authorization code flow.
+  """
+  @spec refresh_token!(any) :: OAuth2.Client.t()
+  def refresh_token!(refresh_token) do
+    client =
+      client(
+        strategy: OAuth2.Strategy.Refresh,
+        params: %{"refresh_token" => refresh_token}
+      )
+
+    client
+    |> put_header("accept", "application/json")
+    |> put_header(
+      "Authorization",
+      "Basic " <> encode_credentials(client.client_id, client.client_secret)
+    )
+    |> OAuth2.Client.get_token!()
   end
 
   # Strategy Callbacks
@@ -69,7 +89,7 @@ defmodule Ueberauth.Strategy.Spotify.OAuth do
 
   def get_token(client, params, _headers) do
     client
-    |> put_header("Accept", "application/json")
+    |> put_header("accept", "application/json")
     |> put_header(
       "Authorization",
       "Basic " <> encode_credentials(client.client_id, client.client_secret)
